@@ -19,21 +19,21 @@ import datetime
 
 class Configuration:
     """Class handling state of configuration"""
-    def __init__(self, args):
+    def __init__(self, cmd_args):
         """Configuration Constructor: Set stuff up"""
         self.user = ''
         self.token = ''
         self.ca_pem = 'cacert.pem'
         self.remote_cacert = 'http://curl.haxx.se/ca/cacert.pem'
-        self.pinboard = 'http://api.pinboard.in/v1'
-        self.dict = vars(self.parse_args(args))
+        self.pinboard_api = 'http://api.pinboard.in/v1'
+        self.dict = vars(self.parse_args(cmd_args))
         self.cacert_exists()
 
     def parse_args(self, args):
         """Parse command line arguments"""
         parser = argparse.ArgumentParser()
         parser.add_argument('-v', '--verbose', help='Verbose output', action='store_const', const=True, default=False)
-        parser.add_argument('-a', '--update-all', help='Update All in Current', action='store_const', const=True, default=False)
+        parser.add_argument('-U', '--update', help='Update Current', action='store_const', const=True, default=False)
         parser.add_argument('-u', '--user', help='User name', action='store', nargs='?', default=self.user)
         parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
         parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
@@ -58,7 +58,20 @@ class Configuration:
                 print('Certificate Authority file could not be retrieved. Exiting')
                 sys.exit(3)
 
+class Pinboard:
+    """Pinboard Methods"""
+    def __init__(self, settings, api):
+        self.settings = settings
+        self.api = api
+        self.posts_all()
+
+    def posts_all(self, method='posts/all'):
+        """Fetch Json formatted backup of all bookmarks"""
+        url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api, method, self.settings['user'], self.settings['token'])
+        wget(self.settings['ca_cert'], url)
+
 def wget(cacert_file, url):
+    print("wget")
     wget_args = '--ca-certificate={0}'.format(cacert_file)
     wget_proc = Popen(['wget', '-qN', wget_args, url], stdout=PIPE, stderr=PIPE)
     stdoutdata = wget_proc.communicate()[0]
@@ -67,12 +80,7 @@ def wget(cacert_file, url):
     else:
         return False
 
-def pinboard_get_all_posts(cacert_file, user, token, api_pinboard, method='posts/all'):
-    """Fetch Json formatted backup of all bookmarks"""
-    url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(api_pinboard, method, user, token)
-    wget(cacert_file, url)
-    
-def setup_environment(master):
+def setup_environment(master, update):
     """Setup the Environment"""
     if master:
         archive = 'archive-master'
@@ -96,7 +104,8 @@ def setup_environment(master):
 
 def main(args):
     settings = Configuration(args)
-    setup_environment(settings.dict['master'])
+    setup_environment(settings.dict['master'], settings.dict['update'])
+    pb = Pinboard(settings.dict, settings.pinboard_api)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
