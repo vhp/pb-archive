@@ -36,6 +36,7 @@ class Configuration:
         parser.add_argument('-u', '--user', help='User name', action='store', nargs='?', default=self.user)
         parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
         parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
+        parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const='true', default='false')
         return parser.parse_args(args)
 
 def wget(cacert_file, url):
@@ -54,7 +55,10 @@ def pinboard_get_all_posts(cacert_file, user, token, api_pinboard, method='posts
     
 def setup_environment():
     """Setup the Environment"""
-    archive = 'archive-{0}'.format(datetime.date.today())
+    if settings.dict['master']:
+        archive = 'archive-master'
+    else:
+        archive = 'archive-{0}'.format(datetime.date.today())
     try:
         os.mkdir(archive)
     except OSError as error:
