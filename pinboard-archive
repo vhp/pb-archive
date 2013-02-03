@@ -32,12 +32,12 @@ class Configuration:
     def parse_args(self, args):
         """Parse command line arguments"""
         parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbose', help='Verbose output', action='store_const', const='true', default='false')
-        parser.add_argument('-a', '--update-all', help='Update All in Current', action='store_const', const='true', default='false')
+        parser.add_argument('-v', '--verbose', help='Verbose output', action='store_const', const=True, default=False)
+        parser.add_argument('-a', '--update-all', help='Update All in Current', action='store_const', const=True, default=False)
         parser.add_argument('-u', '--user', help='User name', action='store', nargs='?', default=self.user)
         parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
         parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
-        parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const='true', default='false')
+        parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const=True, default=False)
         return parser.parse_args(args)
 
     def update_cacert(self):
