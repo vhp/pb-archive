@@ -27,6 +27,7 @@ class Configuration:
         self.remote_cacert = 'http://curl.haxx.se/ca/cacert.pem'
         self.pinboard = 'http://api.pinboard.in/v1'
         self.dict = vars(self.parse_args(args))
+        self.cacert_exists()
 
     def parse_args(self, args):
         """Parse command line arguments"""
@@ -38,6 +39,24 @@ class Configuration:
         parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
         parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const='true', default='false')
         return parser.parse_args(args)
+
+    def update_cacert(self):
+        """Fetch Updated Certificate Authority"""
+        if wget(self.dict['ca_cert'], self.remote_cacert):
+            print('Certificate Authority file updated')
+            return True
+        else:
+            return False
+
+    def cacert_exists(self):
+        """Check if the CA Certificate Exists.  If not initiate download"""
+        try:
+            with open(self.dict['ca_cert']) as cert: pass
+        except IOError:
+            print('{0} does not exist. Downloading').format(self.dict['ca_cert'])
+            if not self.update_cacert():
+                print('Certificate Authority file could not be retrieved. Exiting')
+                sys.exit(3)
 
 def wget(cacert_file, url):
     wget_args = '--ca-certificate={0}'.format(cacert_file)
@@ -53,9 +72,9 @@ def pinboard_get_all_posts(cacert_file, user, token, api_pinboard, method='posts
     url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(api_pinboard, method, user, token)
     wget(cacert_file, url)
     
-def setup_environment():
+def setup_environment(master):
     """Setup the Environment"""
-    if settings.dict['master']:
+    if master:
         archive = 'archive-master'
     else:
         archive = 'archive-{0}'.format(datetime.date.today())
@@ -73,29 +92,11 @@ def setup_environment():
             print('Error: {0}'.format(error.errno))
             sys.exit(2)
     else:
-        os.chdir(archive):
-
-def update_cacert(cert_file, cacert_source):
-    """Fetch Updated Certificate Authority"""
-    if wget(cert_file, cacert_source):
-        print('Certificate Authority file updated')
-        return True
-    else:
-        return False
-
-def cacert_exists(cert_file, cacert_source):
-    """Check if the CA Certificate Exists.  If not initiate download"""
-    try:
-        with open(cert_file) as ca_cert: pass
-    except IOError:
-        print('{0} does not exist. Downloading').format(cert_file)
-        if not update_cacert(cert_file, cacert_source):
-            print('Certificate Authority file could not be retrieved. Exiting')
-            sys.exit(3)
+        os.chdir(archive)
 
 def main(args):
     settings = Configuration(args)
-    cacert_exists(settings.dict['ca_cert'], settings.remote_cacert)
+    setup_environment(settings.dict['master'])
 
 if __name__ == '__main__':
     main(sys.argv[1:])
