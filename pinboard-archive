@@ -73,10 +73,7 @@ def setup_environment():
             print('Error: {0}'.format(error.errno))
             sys.exit(2)
     else:
-        if os.chdir(archive):
-            return True
-        else:
-            return False
+        os.chdir(archive):
 
 def update_cacert(cert_file, cacert_source):
     """Fetch Updated Certificate Authority"""
