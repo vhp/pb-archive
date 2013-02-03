@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+#
+#   Author: Vincent Perricone <vhp@lavabit.com>
+#   Date: 01/2012
+#   Title: PINBOARD-ARCHIVE
+#   License: Released under "Simplified BSD License" see LICENSE file
+#
+import sys
+import os
+import errno
+try:
+    import argparse
+except ImportError:
+        print("Error: Python module 'argparse' not found."),
+        sys.exit(1)
+from subprocess import Popen
+from subprocess import PIPE
+import datetime
+
+class Configuration:
+    """Class handling state of configuration"""
+    def __init__(self, args):
+        """Configuration Constructor: Set stuff up"""
+        self.user = ''
+        self.token = ''
+        self.ca_pem = 'cacert.pem'
+        self.remote_cacert = 'http://curl.haxx.se/ca/cacert.pem'
+        self.pinboard = 'http://api.pinboard.in/v1'
+        self.dict = vars(self.parse_args(args))
+
+    def parse_args(self, args):
+        """Parse command line arguments"""
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-v', '--verbose', help='Verbose output', action='store_const', const='true', default='false')
+        parser.add_argument('-a', '--update-all', help='Update All in Current', action='store_const', const='true', default='false')
+        parser.add_argument('-u', '--user', help='User name', action='store', nargs='?', default=self.user)
+        parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
+        parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
+        return parser.parse_args(args)
+
+def wget(cacert_file, url):
+    wget_args = '--ca-certificate={0}'.format(cacert_file)
+    wget_proc = Popen(['wget', '-qN', wget_args, url], stdout=PIPE, stderr=PIPE)
+    stdoutdata = wget_proc.communicate()[0]
+    if wget_proc.returncode == 0:
+        return True
+    else:
+        return False
+
+def pinboard_get_all_posts(cacert_file, user, token, api_pinboard, method='posts/all'):
+    """Fetch Json formatted backup of all bookmarks"""
+    url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(api_pinboard, method, user, token)
+    wget(cacert_file, url)
+    
+def setup_environment():
+    """Setup the Environment"""
+    archive = 'archive-{0}'.format(datetime.date.today())
+    try:
+        os.mkdir(archive)
+    except OSError as error:
+        if error.errno == errno.EEXIST:
+            print("Archive Directory {0} already exists".format(archive))
+            print('Please use -U flag for updating or move {0}'.format(archive))
+            sys.exit(4)
+        elif error.errno == errno.EACCES:
+            print("Permission Denied: {0} could not be created".format(archive))
+            sys.exit(5)
+        else:
+            print('Error: {0}'.format(error.errno))
+            sys.exit(2)
+    else:
+        if os.chdir(archive):
+            return True
+        else:
+            return False
+
+def update_cacert(cert_file, cacert_source):
+    """Fetch Updated Certificate Authority"""
+    if wget(cert_file, cacert_source):
+        print('Certificate Authority file updated')
+        return True
+    else:
+        return False
+
+def cacert_exists(cert_file, cacert_source):
+    """Check if the CA Certificate Exists.  If not initiate download"""
+    try:
+        with open(cert_file) as ca_cert: pass
+    except IOError:
+        print('{0} does not exist. Downloading').format(cert_file)
+        if not update_cacert(cert_file, cacert_source):
+            print('Certificate Authority file could not be retrieved. Exiting')
+            sys.exit(3)
+
+def main(args):
+    settings = Configuration(args)
+    cacert_exists(settings.dict['ca_cert'], settings.remote_cacert)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
