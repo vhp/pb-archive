@@ -16,6 +16,7 @@ except ImportError:
 from subprocess import Popen
 from subprocess import PIPE
 import datetime
+import json
 
 class Configuration:
     """Class handling state of configuration"""
@@ -23,7 +24,6 @@ class Configuration:
         """Configuration Constructor: Set stuff up"""
         self.user = ''
         self.token = ''
-        self.ca_pem = 'cacert.pem'
         self.remote_cacert = 'http://curl.haxx.se/ca/cacert.pem'
         self.pinboard_api = 'http://api.pinboard.in/v1'
         self.dict = vars(self.parse_args(cmd_args))
@@ -36,8 +36,9 @@ class Configuration:
         parser.add_argument('-U', '--update', help='Update Current', action='store_const', const=True, default=False)
         parser.add_argument('-u', '--user', help='User name', action='store', nargs='?', default=self.user)
         parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
-        parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default=self.ca_pem)
+        parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default='cacert.pem')
         parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const=True, default=False)
+        parser.add_argument('-b', '--bookmark-file', help='Bookmark filename', action='store', nargs='?', default='pinboard-bookmarks')
         return parser.parse_args(args)
 
     def update_cacert(self):
@@ -63,15 +64,21 @@ class Pinboard:
     def __init__(self, settings, api):
         self.settings = settings
         self.api = api
-        self.posts_all()
+        self.get_all_bookmarks()
 
-    def posts_all(self, method='posts/all'):
-        """Fetch Json formatted backup of all bookmarks"""
+    def get_all_bookmarks(self, method='posts/all'):
+        """Fetch Json formatted backup file representing all bookmarks"""
         url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api, method, self.settings['user'], self.settings['token'])
-        wget(self.settings['ca_cert'], url)
+        wget_ca = '--ca-certificate={0}'.format(self.settings['ca_cert'])
+        wget_out = '-O{0}'.format(self.settings['bookmark_file'])
+        wget_proc = Popen(['wget', '-qN', wget_ca, wget_out, url], stdout=PIPE, stderr=PIPE)
+        stdoutdata = wget_proc.communicate()[0]
+        if wget_proc.returncode == 0:
+            return True
+        else:
+            return False
 
 def wget(cacert_file, url):
-    print("wget")
     wget_args = '--ca-certificate={0}'.format(cacert_file)
     wget_proc = Popen(['wget', '-qN', wget_args, url], stdout=PIPE, stderr=PIPE)
     stdoutdata = wget_proc.communicate()[0]
@@ -80,9 +87,9 @@ def wget(cacert_file, url):
     else:
         return False
 
-def setup_environment(master, update):
+def setup_environment(mode_master, mode_update):
     """Setup the Environment"""
-    if master:
+    if mode_master:
         archive = 'archive-master'
     else:
         archive = 'archive-{0}'.format(datetime.date.today())
@@ -90,9 +97,12 @@ def setup_environment(master, update):
         os.mkdir(archive)
     except OSError as error:
         if error.errno == errno.EEXIST:
-            print("Archive Directory {0} already exists".format(archive))
-            print('Please use -U flag for updating or move {0}'.format(archive))
-            sys.exit(4)
+            if mode_update:
+                os.chdir(archive)
+            else:
+                print("Archive Directory {0} already exists".format(archive))
+                print('Please use -U flag for updating or move {0}'.format(archive))
+                sys.exit(4)
         elif error.errno == errno.EACCES:
             print("Permission Denied: {0} could not be created".format(archive))
             sys.exit(5)
