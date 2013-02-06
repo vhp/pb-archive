@@ -17,6 +17,7 @@ from subprocess import Popen
 from subprocess import PIPE
 import datetime
 import json
+from time import sleep
 
 class Configuration:
     """Class handling state of configuration"""
@@ -38,7 +39,7 @@ class Configuration:
         parser.add_argument('-t', '--token', help='Token', action='store', nargs='?', default=self.token)
         parser.add_argument('-c', '--ca-cert', help='CA Certificates', action='store', nargs='?', default='cacert.pem')
         parser.add_argument('-m', '--master', help='Master Mode', action='store_const', const=True, default=False)
-        parser.add_argument('-b', '--bookmark-file', help='Bookmark filename', action='store', nargs='?', default='pinboard-bookmarks')
+        parser.add_argument('-b', '--bookmark-file', help='Bookmark filename', action='store', nargs='?', default='pinboard-bookmarks.json')
         return parser.parse_args(args)
 
     def update_cacert(self):
@@ -52,7 +53,7 @@ class Configuration:
     def cacert_exists(self):
         """Check if the CA Certificate Exists.  If not initiate download"""
         try:
-            with open(self.dict['ca_cert']) as cert: pass
+            with open(self.dict['ca_cert']): pass
         except IOError:
             print('{0} does not exist. Downloading').format(self.dict['ca_cert'])
             if not self.update_cacert():
@@ -68,7 +69,10 @@ class Pinboard:
 
     def get_all_bookmarks(self, method='posts/all'):
         """Fetch Json formatted backup file representing all bookmarks"""
-        url = '{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api, method, self.settings['user'], self.settings['token'])
+        url = ('{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api, method,
+                self.settings['user'], self.settings['token']))
+        print('Sleeping for 30 seconds')
+        sleep(30)
         wget_ca = '--ca-certificate={0}'.format(self.settings['ca_cert'])
         wget_out = '-O{0}'.format(self.settings['bookmark_file'])
         wget_proc = Popen(['wget', '-qN', wget_ca, wget_out, url], stdout=PIPE, stderr=PIPE)
@@ -78,7 +82,18 @@ class Pinboard:
         else:
             return False
 
+def wget_archive(ca_cert, url):
+    """Archival wget(1), used for bookmark archiving"""
+    wget_ca = '--ca-certificate={0}'.format(ca_cert)
+    wget_proc = Popen(['wget', wget_ca, '--page-requisites', '--no-verbose', '--convert-links', '--adjust-extension', '--backup-converted',  url], stdout=PIPE, stderr=PIPE)
+    stdoutdata = wget_proc.communicate()[0]
+    if wget_proc.returncode == 0:
+        return True
+    else:
+        return False
+
 def wget(cacert_file, url):
+    """Non archival wget(1)"""
     wget_args = '--ca-certificate={0}'.format(cacert_file)
     wget_proc = Popen(['wget', '-qN', wget_args, url], stdout=PIPE, stderr=PIPE)
     stdoutdata = wget_proc.communicate()[0]
@@ -86,6 +101,18 @@ def wget(cacert_file, url):
         return True
     else:
         return False
+
+def get_bookmark(bookmark_file):
+    """Extract Description, URL and Tags and yield tuple"""
+    with open(bookmark_file, 'r') as bookmarks_obj:
+        bookmarks = json.load(bookmarks_obj)
+        for bookmark in bookmarks:
+            yield (bookmark['description'], bookmark['href'], bookmark['tags'])
+
+def archive(bookmark_file, ca_cert):
+    """Process of archiving the data"""
+    for desc, url, tags in get_bookmark(bookmark_file):
+        wget_archive(ca_cert, url)
 
 def setup_environment(mode_master, mode_update):
     """Setup the Environment"""
@@ -116,6 +143,7 @@ def main(args):
     settings = Configuration(args)
     setup_environment(settings.dict['master'], settings.dict['update'])
     pb = Pinboard(settings.dict, settings.pinboard_api)
+    archive(settings.dict['bookmark_file'], settings.dict['ca_cert'])
 
 if __name__ == '__main__':
     main(sys.argv[1:])
