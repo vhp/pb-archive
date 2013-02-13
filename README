@@ -1,0 +1,27 @@
+            pb-archive - pinboard.in bookmark archiver
+--------------------------------------------------------------------------------
+
+Intro:
+    pb-archive archives your pinboard bookmarks as well as all page requisites.
+    
+Directions:
+    * Directions on usage can be found in the man page man/pb-archive.1
+        > man man/pb-archive.1
+
+Design:
+    * wget(1) was chosen over urllib2 as to not reinvent the wheel. wget does a 
+      very good job at archiving/mirroring so it only made sense to take 
+      advantage of that. wget does a fantastic job.
+
+License:
+    * License information can be found in the LICENSE file.
+
+Thank You:
+    * Maciej Cegłowski for creating and running pinboard.in as well as providing
+      a great API.  
+      
+    * cURL Team for providing updated Certificate Authority Certs allowing for
+      SSL/TLS support.
+      
+    * wget authors and maintainers for providing such a great and comprehensive
+      piece of software.

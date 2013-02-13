@@ -1,0 +1,110 @@
+.TH PB-ARCHIVE 1 "February 10, 2013" 
+.SH NAME
+.PP
+pb-archive - archive your pinboard bookmarks
+.SH SYNOPSIS
+.PP
+pb-archive [\f[I]options\f[]] -u username -t security_token
+.SH DESCRIPTION
+.PP
+pb-archive creates a backup of your pinboard bookmarks.
+Bookmarks are then archived along with all other page requisites such as
+css files.
+Archived pages are laid out on the local filesystem according to the
+bookmarked url.
+A report is created which holds the description, original url,
+filesystem location and all user set tags.
+.PP
+Interaction with Pinboard is done through their v1 api.
+pb-archive will only use your username and security token and will not
+use your password.
+You can easily reset your token at anytime.
+.SH OPTIONS
+.TP
+.B -v, --verbose
+Verbose Output.
+.RS
+.RE
+.TP
+.B -u \f[I]USERNAME\f[], --user \f[I]USERNAME\f[]
+Your Pinboard username.
+.RS
+.RE
+.TP
+.B -t \f[I]TOKEN\f[], --token \f[I]TOKEN\f[]
+Your Pinboard security token.
+.RS
+.RE
+.TP
+.B -c \f[I]CA_CERT\f[], --ca-cert \f[I]CA_CERT\f[]
+Location of Certificate Authority File for wget.
+.RS
+.RE
+.TP
+.B -m, --master
+Enable master mode.
+Master mode creates one archive hierarchy.
+The default creates a new archive for each day pinboard-archive is ran.
+Enabling this will create an \[aq]archive-master\[aq] directory instead
+of a \[aq]archive-YYYY-MM-DD\[aq]
+.RS
+.RE
+.TP
+.B -U, --update
+Update your current archive.
+This option is required if you want to update your previously created
+archive.
+Updates occur in-place.
+Use master mode (-m) to keep one consistent archive hierarchy.
+This option does nothing if today\[aq]s YYYY-MM-DD doesn\[aq]t match the
+directory \[aq]archive-YYYY-MM-DD\[aq].
+.RS
+.RE
+.TP
+.B -b, --bookmark-file
+Output filename of your intended bookmark file.
+Default pinboard-bookmarks.json
+.RS
+.RE
+.TP
+.B -s, --strict
+Warning for each bookmark will be shown if the archive is not perfect.
+Otherwise work is done on a best effort.
+Example.
+Downloading a page with an embedded flash video may fail.
+Enabling strict mode will warn you know about it.
+Assessment is done after archiving takes place.
+.RS
+.RE
+.TP
+.B --help
+Show help menu.
+.RS
+.RE
+.SH EXAMPLES
+.PP
+\f[B]Basic Archive:\f[]
+.RS
+.PP
+> pb-archive -u <username> -t <token>
+.RE
+.PP
+\f[B]Update Archive\f[]
+.RS
+.PP
+> pb-archive -U -u <username> -t <token>
+.RE
+.PP
+\f[B]Master Mode\f[]
+.RS
+.PP
+> pb-archive -m -u <username> -t <token>
+.RE
+.SH LICENSE
+.PP
+Please see the LICENSE file for License information.
+.PP
+pb-archive(1) is not a product of Nine Fives Software or Maciej
+Cegłowski.
+.SH AUTHORS
+Vincent Perricone.
