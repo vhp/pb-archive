@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 #   Author: Vincent Perricone <vhp@lavabit.com>
-#   Date: 01/2012
+#   Date: 02/2012
 #   Title: PB-ARCHIVE
 #   Description: Archive your pinboard.in bookmarks
 #   License: Released under "Simplified BSD License" see LICENSE file
@@ -19,7 +19,7 @@ from subprocess import Popen, PIPE
 try:
     import argparse
 except ImportError:
-        print("Error: Python module 'argparse' not found."),
+        print("Python module 'argparse' not found."),
         sys.exit(1)
 
 class Configuration:
