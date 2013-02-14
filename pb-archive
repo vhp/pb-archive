@@ -126,8 +126,14 @@ def wget(cacert_file, url):
 
 def get_bookmark(bookmark_file):
     """Extract Description, URL and Tags and yield tuple"""
-    with open(bookmark_file, 'r') as bookmarks_obj:
-        bookmarks = json.load(bookmarks_obj)
+    try:
+        with open(bookmark_file, 'r') as bookmarks_obj:
+            bookmarks = json.load(bookmarks_obj)
+    except IOError:
+        print("Cannot open bookmark file '{0}'".format(bookmark_file))
+    except ValueError:
+        print("'{0}' file does not contain valid json".format(bookmark_file))
+    else:
         for bookmark in bookmarks:
             yield (bookmark['description'], bookmark['href'], bookmark['tags'])
 
