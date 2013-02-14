@@ -4,7 +4,7 @@
 
 # NAME
 
-pb-archive - archive your pinboard bookmarks
+pb-archive - archive your pinboard.in bookmarks
 
 # SYNOPSIS
 
@@ -12,7 +12,7 @@ pb-archive [*options*] -u username -t security_token
 
 # DESCRIPTION
 
-pb-archive creates a backup of your pinboard bookmarks. Bookmarks
+pb-archive creates a backup of your pinboard.in bookmarks. Bookmarks
 are then archived along with all other page requisites such as css files. 
 Archived pages are laid out on the local filesystem according to the
 bookmarked url. A report is created which holds the description, original 
@@ -20,7 +20,8 @@ url, filesystem location and all user set tags.
 
 Interaction with Pinboard is done through their v1 api. pb-archive will only
 use your username and security token and will not use your password. You can
-easily reset your token at anytime.
+easily reset your token at anytime. You can hard code your username and token 
+into the pb-archive file in the constructor of the Configuration class.
 
 All bookmarks with implicit extensions will have extensions added. Archived 
 files are rewritten for local viewing.  A copy of each is made and will have the
@@ -67,19 +68,19 @@ files are rewritten for local viewing.  A copy of each is made and will have the
 
 **Basic Archive:**
 
->\> pb-archive -u \<username\> -t \<token\>
+>\ pb-archive -u \<username\> -t \<token\>
 
 **Update Archive**
 
->\> pb-archive -U -u \<username\> -t \<token\>
+>\ pb-archive -U -u \<username\> -t \<token\>
 
 **Master Mode**
 
->\> pb-archive -m -u \<username\> -t \<token\>
+>\ pb-archive -m -u \<username\> -t \<token\>
 
 # LICENSE
 
-Please see the LICENSE file for License information.
+Simplified BSD License. see the LICENSE file.
 
-pb-archive(1) is not a product of Nine Fives Software or Maciej Cegłowski.
+pb-archive is not a product of Nine Fives Software.
 

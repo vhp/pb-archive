@@ -1,13 +1,13 @@
 .TH PB-ARCHIVE 1 "February 10, 2013" 
 .SH NAME
 .PP
-pb-archive - archive your pinboard bookmarks
+pb-archive - archive your pinboard.in bookmarks
 .SH SYNOPSIS
 .PP
 pb-archive [\f[I]options\f[]] -u username -t security_token
 .SH DESCRIPTION
 .PP
-pb-archive creates a backup of your pinboard bookmarks.
+pb-archive creates a backup of your pinboard.in bookmarks.
 Bookmarks are then archived along with all other page requisites such as
 css files.
 Archived pages are laid out on the local filesystem according to the
@@ -19,6 +19,12 @@ Interaction with Pinboard is done through their v1 api.
 pb-archive will only use your username and security token and will not
 use your password.
 You can easily reset your token at anytime.
+You can hard code your username and token into the pb-archive file in
+the constructor of the Configuration class.
+.PP
+All bookmarks with implicit extensions will have extensions added.
+Archived files are rewritten for local viewing.
+A copy of each is made and will have the \[aq].orig\[aq] extension.
 .SH OPTIONS
 .TP
 .B -v, --verbose
@@ -86,25 +92,25 @@ Show help menu.
 \f[B]Basic Archive:\f[]
 .RS
 .PP
-> pb-archive -u <username> -t <token>
+\ pb-archive -u <username> -t <token>
 .RE
 .PP
 \f[B]Update Archive\f[]
 .RS
 .PP
-> pb-archive -U -u <username> -t <token>
+\ pb-archive -U -u <username> -t <token>
 .RE
 .PP
 \f[B]Master Mode\f[]
 .RS
 .PP
-> pb-archive -m -u <username> -t <token>
+\ pb-archive -m -u <username> -t <token>
 .RE
 .SH LICENSE
 .PP
-Please see the LICENSE file for License information.
+Simplified BSD License.
+see the LICENSE file.
 .PP
-pb-archive(1) is not a product of Nine Fives Software or Maciej
-Cegłowski.
+pb-archive is not a product of Nine Fives Software.
 .SH AUTHORS
 Vincent Perricone.
