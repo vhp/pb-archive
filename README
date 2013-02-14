@@ -2,19 +2,21 @@
 --------------------------------------------------------------------------------
 
 Intro:
-    pb-archive archives your pinboard bookmarks as well as all page requisites.
+    pb-archive archives your pinboard.in bookmarks as well as all page requisites.
     
 Directions:
     * Directions on usage can be found in the man page man/pb-archive.1
         > man man/pb-archive.1
-
+    * Use pandoc to build man pages
+        pandoc -s -w man pinboard-archive.1.md -o pinboard-archive.1
 Design:
     * wget(1) was chosen over urllib2 as to not reinvent the wheel. wget does a 
-      very good job at archiving/mirroring so it only made sense to take 
+      very good job at archiving/mirroring so it only made sense to take
       advantage of that. wget does a fantastic job.
 
 License:
-    * License information can be found in the LICENSE file.
+    * License information can be found in the LICENSE file. All files in this project
+      repository are licensed under the Simplified BSD License.
 
 Thank You:
     * Maciej Cegłowski for creating and running pinboard.in as well as providing
