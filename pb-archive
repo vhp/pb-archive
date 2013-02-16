@@ -89,9 +89,9 @@ def get_local(first_line, url):
     """Ensure wget(1) output and return local path of archive if it exists"""
     pattern = '^\d{4}-\d{2}-\d{2}\ \d{2}:\d{2}:\d{2}\ URL:\S+\ \[\S+\]\ ->\ \S+\ \[1\]$'
     if re.match(pattern, first_line):
-        base =  re.sub('^URL:', '', shlex.split(first_line)[2])
+        base_url = re.sub('^URL:', '', shlex.split(first_line)[2])
         local_file = shlex.split(first_line)[5]
-        if base in url:
+        if base_url in url:
             return local_file
         else:
             return None
