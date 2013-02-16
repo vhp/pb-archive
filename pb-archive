@@ -136,16 +136,16 @@ def get_bookmark(bookmark_file):
             yield (bookmark['description'], bookmark['href'], bookmark['tags'])
 
 def archive(bookmark_file, mode_strict, ca_cert):
-    """Process of archiving the data"""
+    """Archiving control and report writing"""
     print('Archiving. This may take a long time.')
     with open('report', 'w+') as report:
         for description, url, tags in get_bookmark(bookmark_file):
             local_file = wget_archive(ca_cert, mode_strict, url)
             if local_file:
-                report.write('{0}\n'.format(description))
-                report.write('\t-URL:{0}\n'.format(url))
-                report.write('\t-Local:./{0}\n'.format(local_file))
-                report.write('\t-Tags:{0}\n\n'.format(tags))
+                report.write('{0}\n'.format(description.encode('utf8', 'replace')))
+                report.write('  -URL:{0}\n'.format(url.encode('utf8', 'replace')))
+                report.write('  -Local:./{0}\n'.format(local_file.encode('utf8', 'replace')))
+                report.write('  -Tags:{0}\n\n'.format(tags.encode('utf8', 'replace')))
             else:
                 print('Failed to Archive: {0}'.format(url))
 
