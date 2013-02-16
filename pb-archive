@@ -81,7 +81,7 @@ class Pinboard:
         wget_out = '-O{0}'.format(self.settings['bookmark_file'])
         wget_proc = (Popen(['wget', '-qN', wget_ca, wget_out, url],
                            stdout=PIPE, stderr=PIPE))
-        stdoutdata = wget_proc.communicate()[0]
+        wget_proc.communicate()
         if wget_proc.returncode == 0:
             return True
         else:
@@ -89,7 +89,7 @@ class Pinboard:
 
 def get_local(first_line, url):
     """Ensure wget(1) output and return local path of archive if it exists"""
-    pattern = r'^\d{4}-\d{2}-\d{2}\ \d{2}:\d{2}:\d{2}\ URL:\S+\ \[\S+\]\ ->\ \S+\ \[1\]$'
+    pattern = '^\d{4}-\d{2}-\d{2}\ \d{2}:\d{2}:\d{2}\ URL:\S+\ \[\S+\]\ ->\ \S+\ \[1\]$'
     if re.match(pattern, first_line):
         base =  re.sub('^URL:', '', shlex.split(first_line)[2])
         local_file = shlex.split(first_line)[5]
@@ -109,7 +109,7 @@ def wget_archive(ca_cert, mode_strict, url):
     (stdout, stderr) = wget_proc.communicate()
     if wget_proc.returncode == 0 or not mode_strict:
         # Success or user accepts best effort
-        return get_local(stderr.splitlines()[0], url)
+        return get_local(stderr.decode("utf-8").splitlines()[0], url)
     else:
         # Failure with Strict mode ON.
         return None
@@ -144,10 +144,10 @@ def archive(bookmark_file, mode_strict, ca_cert):
         for description, url, tags in get_bookmark(bookmark_file):
             local_file = wget_archive(ca_cert, mode_strict, url)
             if local_file:
-                report.write('{0}\n'.format(description.encode('utf8', 'replace')))
-                report.write('\t-URL:{0}\n'.format(url.encode('utf8', 'replace')))
-                report.write('\t-Local:./{0}\n'.format(local_file.encode('utf8', 'replace')))
-                report.write('\t-Tags:{0}\n\n'.format(tags.encode('utf8', 'replace')))
+                report.write('{0}\n'.format(description))
+                report.write('\t-URL:{0}\n'.format(url))
+                report.write('\t-Local:./{0}\n'.format(local_file))
+                report.write('\t-Tags:{0}\n\n'.format(tags))
             else:
                 print('Failed to Archive: {0}'.format(url))
 
@@ -164,11 +164,11 @@ def setup_environment(mode_master, mode_update):
             if mode_update:
                 os.chdir(archive)
             else:
-                print("Archive Directory {0} already exists".format(archive))
+                print('Archive Directory {0} already exists'.format(archive))
                 print('Use -U flag for updating or move {0}'.format(archive))
                 sys.exit(4)
         elif error.errno == errno.EACCES:
-            print("Permission Denied: {0} could not be created".format(archive))
+            print('Permission Denied: {0} could not be created'.format(archive))
             sys.exit(5)
         else:
             print('Error: {0}'.format(error.errno))
