@@ -14,7 +14,7 @@ import json
 import shlex
 import re
 from time import sleep
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 
 try:
     import argparse
@@ -79,10 +79,8 @@ class Pinboard:
         sleep(30)
         wget_ca = '--ca-certificate={0}'.format(self.settings['ca_cert'])
         wget_out = '-O{0}'.format(self.settings['bookmark_file'])
-        wget_proc = (Popen(['wget', '-qN', wget_ca, wget_out, url],
-                           stdout=PIPE, stderr=PIPE))
-        wget_proc.communicate()
-        if wget_proc.returncode == 0:
+        wget = call(['wget', '-qN', wget_ca, wget_out, url])
+        if wget == 0:
             return True
         else:
             return False
