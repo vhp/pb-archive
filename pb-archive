@@ -13,6 +13,7 @@ import datetime
 import json
 import shlex
 import re
+import logging
 from time import sleep
 from subprocess import Popen, PIPE, call
 
@@ -21,6 +22,8 @@ try:
 except ImportError:
         print("Python module 'argparse' not found."),
         sys.exit(1)
+
+logger = logging.getLogger('pb_archive')
 
 class Configuration:
     """Class handling state of configuration"""
@@ -31,6 +34,7 @@ class Configuration:
         self.remote_cacert = 'http://curl.haxx.se/ca/cacert.pem'
         self.pinboard_api = 'http://api.pinboard.in/v1'
         self.dict = vars(self.parse_args(cmd_args))
+        self.setup_logging()
         self.cacert_exists()
 
     def parse_args(self, args):
@@ -46,10 +50,25 @@ class Configuration:
         parser.add_argument('-s', '--strict', help='Strict Mode', action='store_const', const=True, default=False)
         return parser.parse_args(args)
 
+    def setup_logging(self):
+        """Configure Logging to file and console"""
+        logfile = logging.FileHandler('pb_archive.log')
+        console = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        logfile.setFormatter(formatter)
+        logger.addHandler(logfile)
+        logger.addHandler(console)
+        logger.setLevel(logging.DEBUG)
+        if self.dict['verbose']:
+            console.setLevel(logging.DEBUG)
+        else:
+            console.setLevel(logging.INFO)
+        logger.debug('pb-archive logging started')
+
     def update_cacert(self):
         """Fetch Updated Certificate Authority"""
         if wget(self.dict['ca_cert'], self.remote_cacert):
-            print('Certificate Authority file updated')
+            logger.info('Certificate Authority file updated')
             return True
         else:
             return False
@@ -59,9 +78,10 @@ class Configuration:
         try:
             with open(self.dict['ca_cert']): pass
         except IOError:
-            print('Updating {0}').format(self.dict['ca_cert'])
+            logger.info('Updating {0}'.format(self.dict['ca_cert']))
             if not self.update_cacert():
-                print('Exiting: Certificate Authority file not retrieved.')
+                logger.error('Certificate Authority not updated. ' + 
+                        'Check Remote Source ({0})'.format(self.remote_cacert))
                 sys.exit(3)
 
 class Pinboard:
@@ -75,7 +95,7 @@ class Pinboard:
         """Fetch Json formatted backup file representing all bookmarks"""
         url = ('{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api,
                 method, self.settings['user'], self.settings['token']))
-        print('Sleeping for 30 seconds')
+        logger.info('Sleeping for 30 seconds')
         sleep(30)
         wget_ca = '--ca-certificate={0}'.format(self.settings['ca_cert'])
         wget_out = '-O{0}'.format(self.settings['bookmark_file'])
@@ -94,12 +114,12 @@ def get_local(first_line, url):
         try:
             with open(local_file): pass
         except IOError:
-            print("Could not Open Local file for {0}".format(url))
+            logger.error('Could not open local file for {0}'.format(url))
             return None
         else:
             return local_file
     else:
-        print('No Match for {0}'.format(url))
+        logger.error('No Match for {0}'.format(url))
         return None
 
 def wget_archive(ca_cert, mode_strict, url):
@@ -112,14 +132,14 @@ def wget_archive(ca_cert, mode_strict, url):
                         '--backup-converted',  url], stdout=PIPE, stderr=PIPE))
     (stdout, stderr) = wget_proc.communicate()
     if wget_proc.returncode == 4:
-        print('Network Error while archiving {0}'.format(url))
+        logger.error('Network Error while archiving {0}'.format(url))
         return None
     elif wget_proc.returncode == 5:
-        print('SSL Error while archiving {0}'.format(url))
+        logger.error('SSL Error while archiving {0}'.format(url))
         return None
     elif wget_proc.returncode == 0 or not mode_strict:
         # Success or user accepts best effort
-        return get_local(stderr.decode("utf-8").splitlines()[0], url)
+        return get_local(stderr.decode('utf-8').splitlines()[0], url)
     else:
         # Failure with Strict mode ON.
         return None
@@ -140,16 +160,16 @@ def get_bookmark(bookmark_file):
         with open(bookmark_file, 'r') as bookmarks_obj:
             bookmarks = json.load(bookmarks_obj)
     except IOError:
-        print("Cannot open bookmark file '{0}'".format(bookmark_file))
+        logger.error("Cannot open bookmark file '{0}'".format(bookmark_file))
     except ValueError:
-        print("'{0}' file does not contain valid json".format(bookmark_file))
+        logger.error("'{0}' file does not contain valid json".format(bookmark_file))
     else:
         for bookmark in bookmarks:
             yield (bookmark['description'], bookmark['href'], bookmark['tags'])
 
 def archive(bookmark_file, mode_strict, ca_cert):
     """Archiving control and report writing"""
-    print('Archiving. This may take a long time.')
+    logger.info('Archiving... This can take a long time.')
     with open('report', 'w+') as report:
         for description, url, tags in get_bookmark(bookmark_file):
             local_file = wget_archive(ca_cert, mode_strict, url)
@@ -159,7 +179,7 @@ def archive(bookmark_file, mode_strict, ca_cert):
                 report.write('  -Local:./{0}\n'.format(local_file.encode('utf8', 'replace')))
                 report.write('  -Tags:{0}\n\n'.format(tags.encode('utf8', 'replace')))
             else:
-                print('Failed to Archive: {0}'.format(url))
+                logger.error('Failed to Archive: {0}'.format(url))
 
 def setup_environment(mode_master, mode_update):
     """Setup the Environment"""
@@ -174,14 +194,14 @@ def setup_environment(mode_master, mode_update):
             if mode_update:
                 os.chdir(archive)
             else:
-                print('Archive Directory {0} already exists'.format(archive))
-                print('Use -U flag for updating or move {0}'.format(archive))
+                logger.error('Archive Directory {0} already exists'.format(archive))
+                logger.error('Use -U flag for updating or move {0}'.format(archive))
                 sys.exit(4)
         elif error.errno == errno.EACCES:
-            print('Permission Denied: {0} could not be created'.format(archive))
+            logger.error('Permission Denied: {0} could not be created'.format(archive))
             sys.exit(5)
         else:
-            print('Error: {0}'.format(error.errno))
+            logger.error('Error: {0}'.format(error.errno))
             sys.exit(2)
     else:
         os.chdir(archive)
