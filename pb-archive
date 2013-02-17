@@ -91,21 +91,33 @@ def get_local(first_line, url):
     if re.match(pattern, first_line):
         base_url = re.sub('^URL:', '', shlex.split(first_line)[2])
         local_file = shlex.split(first_line)[5]
-        if base_url in url:
-            return local_file
-        else:
+        try:
+            with open(local_file): pass
+        except IOError:
+            print("Could not Open Local file for {0}".format(url))
             return None
+        else:
+            return local_file
     else:
+        print('No Match for {0}'.format(url))
         return None
 
 def wget_archive(ca_cert, mode_strict, url):
     """Archival wget(1), used for bookmark archiving"""
+    agent = 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0'
+    wget_usr_agent = '--user-agent={0}'.format(agent)
     wget_ca = '--ca-certificate={0}'.format(ca_cert)
-    wget_proc = (Popen(['wget', wget_ca, '--page-requisites', '--no-verbose',
-                        '--convert-links', '--adjust-extension',
+    wget_proc = (Popen(['wget', wget_ca, wget_usr_agent, '--page-requisites', 
+                        '--no-verbose', '--convert-links', '--adjust-extension',
                         '--backup-converted',  url], stdout=PIPE, stderr=PIPE))
     (stdout, stderr) = wget_proc.communicate()
-    if wget_proc.returncode == 0 or not mode_strict:
+    if wget_proc.returncode == 4:
+        print('Network Error while archiving {0}'.format(url))
+        return None
+    elif wget_proc.returncode == 5:
+        print('SSL Error while archiving {0}'.format(url))
+        return None
+    elif wget_proc.returncode == 0 or not mode_strict:
         # Success or user accepts best effort
         return get_local(stderr.decode("utf-8").splitlines()[0], url)
     else:
