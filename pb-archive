@@ -129,8 +129,8 @@ def wget_archive(ca_cert, mode_strict, url):
     wget_ca = '--ca-certificate={0}'.format(ca_cert)
     wget_proc = (Popen(['wget', wget_ca, wget_usr_agent, '--page-requisites', 
                         '--no-verbose', '--convert-links', '--adjust-extension',
-                        '--backup-converted',  url], stdout=PIPE, stderr=PIPE))
-    (stdout, stderr) = wget_proc.communicate()
+                        '--backup-converted', url], stdout=PIPE, stderr=PIPE))
+    stderr = wget_proc.communicate()[1]
     if wget_proc.returncode == 4:
         logger.error('Network Error while archiving {0}'.format(url))
         return None
@@ -148,7 +148,7 @@ def wget(cacert_file, url):
     """Non archival wget(1)"""
     wget_args = '--ca-certificate={0}'.format(cacert_file)
     wget_proc = Popen(['wget', '-qN', wget_args, url], stdout=PIPE, stderr=PIPE)
-    stdoutdata = wget_proc.communicate()[0]
+    wget_proc.communicate()
     if wget_proc.returncode == 0:
         return True
     else:
@@ -179,7 +179,7 @@ def archive(bookmark_file, mode_strict, ca_cert):
                 report.write('  -Local:./{0}\n'.format(local_file.encode('utf8', 'replace')))
                 report.write('  -Tags:{0}\n\n'.format(tags.encode('utf8', 'replace')))
             else:
-                logger.error('Failed to Archive: {0}'.format(url))
+                logger.debug('Failed to Archive: {0}'.format(url))
 
 def setup_environment(mode_master, mode_update):
     """Setup the Environment"""
