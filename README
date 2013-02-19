@@ -11,10 +11,11 @@ Directions:
         python argparse module.
     * Use pandoc to build man pages
         pandoc -s -w man pinboard-archive.1.md -o pinboard-archive.1
+
 Design:
     * wget(1) was chosen over urllib2 as to not reinvent the wheel. wget does a 
       very good job at archiving/mirroring so it only made sense to take
-      advantage of that. wget does a fantastic job.
+      advantage of that. 
 
 License:
     * License information can be found in the LICENSE file. All files in this project
