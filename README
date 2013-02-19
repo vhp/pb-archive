@@ -7,6 +7,8 @@ Intro:
 Directions:
     * Directions on usage can be found in the man page man/pb-archive.1
         > man man/pb-archive.1
+    * Tested to work on Python 2.7 and Python 3. Requires wget(1) and
+        python argparse module.
     * Use pandoc to build man pages
         pandoc -s -w man pinboard-archive.1.md -o pinboard-archive.1
 Design:
