@@ -57,9 +57,8 @@ files are rewritten for local viewing.  A copy of each is made and will have the
     Default pinboard-bookmarks.json
 
 -s, \--strict
-:   Warning for each bookmark will be shown if the archive is not perfect.  Otherwise work is done on a best effort.  Example. Downloading a page with 
-    an embedded flash video may fail. Enabling strict mode will warn you know 
-    about it.  Assessment is done after archiving takes place.
+:   Warning for each bookmark will be shown if the archive is not perfect.  Otherwise work is done on a best effort. 
+    Assessment is done after archiving takes place.
 
 --help
 :   Show help menu.
