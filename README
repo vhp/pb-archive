@@ -10,7 +10,7 @@ Directions:
     * Tested to work on Python 2.7 and Python 3. Requires wget(1) and
         python argparse module.
     * Use pandoc to build man pages
-        pandoc -s -w man pinboard-archive.1.md -o pinboard-archive.1
+        pandoc -s -w man pb-archive.1.md -o pb-archive.1
 
 Design:
     * wget(1) was chosen over urllib2 as to not reinvent the wheel. wget does a 
