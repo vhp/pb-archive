@@ -14,7 +14,7 @@ import json
 import shlex
 import re
 import logging
-from time import sleep
+from time import sleep, time
 from subprocess import Popen, PIPE, call
 
 try:
@@ -95,8 +95,6 @@ class Pinboard:
         """Fetch Json formatted backup file representing all bookmarks"""
         url = ('{0}/{1}?format=json&auth_token={2}:{3}'.format(self.api,
                 method, self.settings['user'], self.settings['token']))
-        logger.info('Sleeping for 30 seconds')
-        sleep(30)
         wget_ca = '--ca-certificate={0}'.format(self.settings['ca_cert'])
         wget_out = '-O{0}'.format(self.settings['bookmark_file'])
         wget = call(['wget', '-qN', wget_ca, wget_out, url])
@@ -206,10 +204,21 @@ def setup_environment(mode_master, mode_update):
         os.chdir(archive)
 
 def main(args):
+    """ * Configure settings from command line
+        * Start timer so we respect pinboard.in api call rate
+        * Make API Calls (Ex. Get Bookmarks)
+        * Archive
+        * Sleep if within api call threshold (Under 5 minutes)
+    """
     settings = Configuration(args)
+    start_time = time()
     setup_environment(settings.dict['master'], settings.dict['update'])
     Pinboard(settings.dict, settings.pinboard_api)
     archive(settings.dict['bookmark_file'], settings.dict['strict'], settings.dict['ca_cert'])
+    end_time = (300 - (time() - start_time))
+    if end_time > 0:
+        print(end_time)
+        sleep(end_time)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
